@@ -1,0 +1,32 @@
+//trigger to update parent's account phone by related contact's phone
+trigger trg2 on Contact (after insert,after Update) 
+{
+     Set<Id> accId  = new Set<Id>();
+    if(trigger.isAfter && (trigger.isInsert || trigger.isUpdate))
+    {
+        for(Contact c : trigger.new)
+        {
+            if(c.AccountId != null)
+            {
+          
+               accId.add(c.AccountId); 
+            
+        }
+        }
+    }
+    Map<Id,Account> accMap = new Map<Id,Account>([Select Id,Phone from Account where Id IN : accId]);
+    List<Account> acctList = new List<Account>();
+    for(Contact con : trigger.new)
+    {
+        if(accMap.containsKey(con.AccountId))
+        {
+            Account acc = accMap.get(con.AccountId);
+            acc.Phone = con.Phone;
+            acctList.add(acc);
+        }
+    }
+    if(acctList.size() != null)
+    {
+        update acctList;
+    }
+}
